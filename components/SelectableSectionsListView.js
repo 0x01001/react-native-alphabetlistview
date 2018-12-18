@@ -192,10 +192,14 @@ export default class SelectableSectionsListView extends Component {
 
     // const isFirst = index === 0;
     // const isLast = this.sectionItemCount && this.sectionItemCount[sectionId]-1 === index;
-
+    const lastItem = this.props.dataSource[this.props.dataSource.length - 1];
+    const isLast = lastItem !== null ? lastItem.data.id === data.data.id : false;
+    // console.log('last item: '+lastItem.data.id + ' | '+data.data.id);
+    
     const props = {
       // isFirst,
-      // isLast,
+      isLast,
+      enableCheckBox: this.props.enableCheckBox,
       // sectionId,
       // index,
       item: data,
@@ -236,7 +240,7 @@ export default class SelectableSectionsListView extends Component {
   // }
 
   render() {
-    const { data, initialListSize } = this.props;
+    const { data } = this.props;
     const dataIsArray = Array.isArray(data);
     let sectionList;
     let renderSectionHeader;
@@ -334,9 +338,10 @@ SelectableSectionsListView.propTypes = {
   ]).isRequired,
 
   dataSource: PropTypes.array.isRequired,
+  enableCheckBox: PropTypes.bool,
 
-  initialListSize: PropTypes.number,
-  onRenderFinish: PropTypes.func,
+  // initialListSize: PropTypes.number,
+  // onRenderFinish: PropTypes.func,
 
   /**
    * Whether to show the section listing or not
