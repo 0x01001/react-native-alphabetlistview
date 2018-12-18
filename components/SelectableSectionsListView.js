@@ -11,14 +11,14 @@ import ReactNative, {
   Dimensions,
 } from 'react-native';
 import merge from 'merge';
-import { RecyclerListView, DataProvider, LayoutProvider } from 'recyclerlistview'
+import { RecyclerListView, DataProvider } from 'recyclerlistview'
 
 import SectionHeader from './SectionHeader';
 import SectionList from './SectionList';
 import CellWrapper from './CellWrapper';
 
 const { UIManager } = NativeModules;
-const { width, height } = Dimensions.get('window')
+// const { width, height } = Dimensions.get('window')
 
 export default class SelectableSectionsListView extends Component {
 
@@ -31,12 +31,12 @@ export default class SelectableSectionsListView extends Component {
       //   sectionHeaderHasChanged: (prev, next) => prev !== next
       // }),
       dataProvider: new DataProvider((r1, r2) => r1 !== r2),
-      layoutProvider: new LayoutProvider(
-        () => 'VSEL',
-        (type, dim) => {          
-          dim.width = width - 30; // padding 15
-          dim.height = this.props.cellHeight;          
-        }),
+      // layoutProvider: new LayoutProvider(
+      //   () => 'VSEL',
+      //   (type, dim) => {          
+      //     dim.width = width - 30; // padding 15
+      //     dim.height = this.props.cellHeight;          
+      //   }),
       offsetY: 0
     };
 
@@ -263,6 +263,7 @@ export default class SelectableSectionsListView extends Component {
           getSectionListTitle={this.props.getSectionListTitle}
           component={this.props.sectionListItem}
           fontStyle={this.props.sectionListFontStyle}
+          headerNavHeight={this.props.headerNavHeight}
         /> :
         null;
 
@@ -305,7 +306,7 @@ export default class SelectableSectionsListView extends Component {
           // canChangeSize={true}
           // onEndReached={this.handleListEnd}
           dataProvider={this.state.dataProvider.cloneWithRows(this.props.dataSource)}
-          layoutProvider={this.state.layoutProvider}
+          layoutProvider={this.props.layoutProvider}
           rowRenderer={this.renderRow}
           // renderFooter={this.renderFooter}
           // onScroll={this.handleScroll}
@@ -326,6 +327,7 @@ const styles = StyleSheet.create({
 const stylesheetProp = PropTypes.oneOfType([
   PropTypes.number,
   PropTypes.object,
+  PropTypes.array,
 ]);
 
 SelectableSectionsListView.propTypes = {
@@ -339,6 +341,8 @@ SelectableSectionsListView.propTypes = {
 
   dataSource: PropTypes.array.isRequired,
   enableCheckBox: PropTypes.bool,
+  layoutProvider: PropTypes.object,
+  headerNavHeight: PropTypes.number,
 
   // initialListSize: PropTypes.number,
   // onRenderFinish: PropTypes.func,

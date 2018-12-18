@@ -56,8 +56,9 @@ export default class SectionList extends Component {
     //})
     const targetY = ev.pageY;
     const { y, width, height } = this.measure;
-    const index = (Math.floor(ev.locationY / height));
-    if (index >= this.props.sections.length) {
+    const index = (Math.floor((ev.locationY + this.props.headerNavHeight - y) / height));
+    // console.log('ev.locationY: '+ev.locationY + ' | '+ height + ' | '+index + ' | '+this.props.sections.length + ' | '+ y + ' | '+this.props.headerNavHeight);    
+    if (index < 0 || index >= this.props.sections.length) {
       return;
     }
 
@@ -74,7 +75,7 @@ export default class SectionList extends Component {
     }
     this.measureTimer = setTimeout(() => {
       sectionItem.measure((x, y, width, height, pageX, pageY) => {
-        //console.log([x, y, width, height, pageX, pageY]);
+        // console.log([x, y, width, height, pageX, pageY]);
         this.measure = {
           y: pageY,
           width,
@@ -151,7 +152,7 @@ export default class SectionList extends Component {
 }
 
 SectionList.propTypes = {
-
+  headerNavHeight: PropTypes.number,
   /**
    * A component to render for each section item
    */
