@@ -4,39 +4,34 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ReactNative, {
-  // ListView,
+  // ListView,  // this
   StyleSheet,
   View,
   NativeModules,
-  Dimensions,
+  Animated, // this
 } from 'react-native';
 import merge from 'merge';
-import { RecyclerListView, DataProvider } from 'recyclerlistview'
+import { RecyclerListView, DataProvider } from 'recyclerlistview' // this
 
 import SectionHeader from './SectionHeader';
 import SectionList from './SectionList';
 import CellWrapper from './CellWrapper';
 
 const { UIManager } = NativeModules;
-// const { width, height } = Dimensions.get('window')
+
+const AnimatedRecyclerListView = Animated.createAnimatedComponent(RecyclerListView) // this
 
 export default class SelectableSectionsListView extends Component {
 
   constructor(props, context) {
     super(props, context);
- 
+
     this.state = {
       // dataSource: new ListView.DataSource({
       //   rowHasChanged: (row1, row2) => row1 !== row2,
       //   sectionHeaderHasChanged: (prev, next) => prev !== next
       // }),
-      dataProvider: new DataProvider((r1, r2) => r1 !== r2),
-      // layoutProvider: new LayoutProvider(
-      //   () => 'VSEL',
-      //   (type, dim) => {          
-      //     dim.width = width - 30; // padding 15
-      //     dim.height = this.props.cellHeight;          
-      //   }),
+      dataProvider: new DataProvider((r1, r2) => r1 !== r2),  // this
       offsetY: 0
     };
 
@@ -55,18 +50,14 @@ export default class SelectableSectionsListView extends Component {
     this.sectionTagMap = {};
     this.updateTagInCellMap = this.updateTagInCellMap.bind(this);
     this.updateTagInSectionMap = this.updateTagInSectionMap.bind(this);
-    // this.startTime = null;
   }
 
   componentWillMount() {
     this.calculateTotalHeight();
-    // this.startTime = new Date().getTime();
   }
 
   componentDidMount() {
     // push measuring into the next tick
-    // const endTime = new Date().getTime();
-    // console.log(`componentDidMount: ${endTime - this.startTime}ms`);  
     setTimeout(() => {
       UIManager.measure(ReactNative.findNodeHandle(this.refs.view), (x,y,w,h) => {
         this.containerHeight = h;
@@ -111,6 +102,14 @@ export default class SelectableSectionsListView extends Component {
     this.cellTagMap[section] = tag;
   }
 
+  getListView = () => {
+    if (this.props.collapsible) {
+      return this._recyclerListView.getNode(); 
+    } else {
+      return this._recyclerListView;
+    }
+  }
+
   scrollToSection(section) {
     let y = 0;
     let headerHeight = this.props.headerHeight || 0;
@@ -129,27 +128,25 @@ export default class SelectableSectionsListView extends Component {
       }
       const index = keys.indexOf(section);
 
+	  // this
       let numcells = 0;
-      if (index > 0) {
-        for (var i = 0; i <= index; i++) {
-          numcells += this.props.data[keys[i]].length;
-        }  
-      }
-     
-      // console.log('index: ', index, section, numcells, keys);      
+	  if (index > 0) {		  
+		  for (var i = 0; i <= index; i++) {
+			numcells += this.props.data[keys[i]].length;	   
+		  }
+	  }															  
+	   //end
 
       sectionHeaderHeight = index * sectionHeaderHeight;
       y += numcells * cellHeight + sectionHeaderHeight;
       const maxY = this.totalHeight - this.containerHeight + headerHeight;
       y = y > maxY ? maxY : y;
 
-      // console.log('y: ', y, sectionHeaderHeight, maxY, this.containerHeight, headerHeight);      
-
-      this._recyclerListView.scrollToOffset(0, y, true);
+      this.getListView().scrollToOffset(0, y, true);   // this
     } else {
-      UIManager.measureLayout(this.cellTagMap[section], ReactNative.findNodeHandle(this._recyclerListView), () => {}, (x, y, w, h) => {
-        y = y - this.props.sectionHeaderHeight;
-        this._recyclerListView.scrollToOffset(0, y, true);
+      UIManager.measureLayout(this.cellTagMap[section], ReactNative.findNodeHandle(this.getListView()), () => {}, (x, y, w, h) => { // this
+        y = y - this.props.sectionHeaderHeight; // this
+        this.getListView().scrollToOffset(0, y, true); 
       });
     }
 
@@ -186,28 +183,28 @@ export default class SelectableSectionsListView extends Component {
     return <Header />;
   }
 
-  renderRow(type, data) {
+  renderRow(type, data) {  // this
     const CellComponent = this.props.cell;
     // index = parseInt(index, 10);
 
     // const isFirst = index === 0;
     // const isLast = this.sectionItemCount && this.sectionItemCount[sectionId]-1 === index;
-    const lastItem = this.props.dataSource[this.props.dataSource.length - 1];
+    const lastItem = this.props.dataSource[this.props.dataSource.length - 1];   // this
     const isLast = lastItem !== null ? lastItem.data.id === data.data.id : false;
-    // console.log('last item: '+lastItem.data.id + ' | '+data.data.id);
-    
+
     const props = {
       // isFirst,
       isLast,
-      enableCheckBox: this.props.enableCheckBox,
+      enableCheckBox: this.props.enableCheckBox,  // this
       // sectionId,
       // index,
-      item: data,
+      item: data,  // this
       offsetY: this.state.offsetY,
       onSelect: this.props.onCellSelect
     };
 
-    return (<CellComponent {...props} {...this.props.cellProps} />);
+    return (<CellComponent {...props} {...this.props.cellProps} />);  // this
+
     // return index === 0 && this.props.useDynamicHeights ?
     //   <CellWrapper
     //     updateTag={this.updateTagInCellMap}
@@ -234,26 +231,21 @@ export default class SelectableSectionsListView extends Component {
     }
   }
 
-  // onRenderFinish = () => {    
-  //   const endTime = new Date().getTime();
-  //   console.log(`onRenderFinish: ${endTime - this.startTime}ms`);    
-  // }
-
   render() {
-    const { data } = this.props;
-    const dataIsArray = Array.isArray(data);
+    const { data, layoutProvider} = this.props;   // this
+    // const dataIsArray = Array.isArray(data);
     let sectionList;
     let renderSectionHeader;
-    // let dataSource;
+    // let dataSource;  
     let sections = Object.keys(data);
 
     if (typeof(this.props.compareFunction) === "function") {
       sections = sections.sort(this.props.compareFunction);
     }
 
-    if (dataIsArray) {
-      // dataSource = this.state.dataSource.cloneWithRows(data); 
-    } else {
+    // if (dataIsArray) {
+    //   dataSource = this.state.dataSource.cloneWithRows(data);
+    // } else {
       sectionList = !this.props.hideSectionList ?
         <SectionList
           style={this.props.sectionListStyle}
@@ -263,13 +255,13 @@ export default class SelectableSectionsListView extends Component {
           getSectionListTitle={this.props.getSectionListTitle}
           component={this.props.sectionListItem}
           fontStyle={this.props.sectionListFontStyle}
-          headerNavHeight={this.props.headerNavHeight}
+          headerNavHeight={this.props.headerNavHeight}  // this
         /> :
         null;
 
       renderSectionHeader = this.renderSectionHeader;
-      // dataSource = this.state.dataSource.cloneWithRowsAndSections(data, sections); 
-    }
+      // dataSource = this.state.dataSource.cloneWithRowsAndSections(data, sections); // this
+    // }
 
     const renderFooter = this.props.footer ?
       this.renderFooter :
@@ -280,41 +272,70 @@ export default class SelectableSectionsListView extends Component {
       this.props.renderHeader;
 
     // const props = merge({}, this.props, {
-    //   // onScroll: this.onScroll,
-    //   // onScrollAnimationEnd: this.onScrollAnimationEnd,
+    //   onScroll: this.onScroll,
+    //   onScrollAnimationEnd: this.onScrollAnimationEnd,
     //   dataSource,
-    //   // renderFooter,
-    //   // initialListSize,  
-    //   // onLayout: this.props.onRenderFinish,    
-    //   // renderHeader,
+    //   renderFooter,
+    //   renderHeader,
     //   renderRow: this.renderRow,
-    //   // renderSectionHeader
+    //   renderSectionHeader
     // });
 
     // props.style = void 0;
 
-    return (
-      <View ref="view" style={[styles.container, this.props.style]}>
-        {/* <ListView
-		  enableEmptySections
-          ref="listview"
-          {...props}             
-        /> */}
+    // return (
+    //   <View ref="view" style={[styles.container, this.props.style]}>
+    //     <ListView
+    //       ref="listview"
+    //       {...props}
+    //     />
+    //     {sectionList}
+    //   </View>
+    // );
+ 
+    // this
+    if (this.props.collapsible) {     
+      const { animatedY, onScroll, paddingHeight } = this.props.collapsible      
+      return (  
+        <View ref="view" style={[styles.container, this.props.style]}>        
+          <AnimatedRecyclerListView
+            ref={(ref) => { this._recyclerListView = ref }}
+            style={styles.container} 
+            // onEndReached={this.handleListEnd}
+            dataProvider={this.state.dataProvider.cloneWithRows(this.props.dataSource)}
+            layoutProvider={layoutProvider}
+            rowRenderer={this.renderRow}
+            // renderFooter={this.renderFooter} 
+             // onLayout={this.props.onRenderFinish} 
+            // contentContainerStyle={{paddingTop: paddingHeight}}
+            // scrollIndicatorInsets={{top: paddingHeight}}
+            onScroll={onScroll}       
+            _mustAddThis={animatedY}                
+            />
+          {/* <View style={this.props.sectionListTempStyle}/> */}
+          {sectionList}
+        </View>
+      );
+    } 
+ 
+    return (  
+      <View ref="view" style={[styles.container, this.props.style]}>        
         <RecyclerListView
           ref={(ref) => { this._recyclerListView = ref }}
-          style={styles.container}
-          // canChangeSize={true}
+          style={styles.container} 
           // onEndReached={this.handleListEnd}
           dataProvider={this.state.dataProvider.cloneWithRows(this.props.dataSource)}
-          layoutProvider={this.props.layoutProvider}
+          layoutProvider={layoutProvider}
           rowRenderer={this.renderRow}
           // renderFooter={this.renderFooter}
-          // onScroll={this.handleScroll}
-          // onVisibleIndexesChanged={this.handleFetchVisibleItem} 
+          // onLayout={this.props.onRenderFinish} 
+          onScroll={this.props.onScroll}             
           />
+        {/* <View style={this.props.sectionListTempStyle}/> */}
         {sectionList}
       </View>
-    );
+    );     
+    // end
   }
 }
 
@@ -327,10 +348,19 @@ const styles = StyleSheet.create({
 const stylesheetProp = PropTypes.oneOfType([
   PropTypes.number,
   PropTypes.object,
-  PropTypes.array,
+  PropTypes.array,    // this
 ]);
 
 SelectableSectionsListView.propTypes = {
+  // this
+  dataSource: PropTypes.array.isRequired,
+  enableCheckBox: PropTypes.bool,
+  layoutProvider: PropTypes.object,
+  collapsible: PropTypes.object,
+  headerNavHeight: PropTypes.number,
+  // onRenderFinish: PropTypes.func, 
+  // end
+
   /**
    * The data to render in the listview
    */
@@ -338,14 +368,6 @@ SelectableSectionsListView.propTypes = {
     PropTypes.array,
     PropTypes.object,
   ]).isRequired,
-
-  dataSource: PropTypes.array.isRequired,
-  enableCheckBox: PropTypes.bool,
-  layoutProvider: PropTypes.object,
-  headerNavHeight: PropTypes.number,
-
-  // initialListSize: PropTypes.number,
-  // onRenderFinish: PropTypes.func,
 
   /**
    * Whether to show the section listing or not
